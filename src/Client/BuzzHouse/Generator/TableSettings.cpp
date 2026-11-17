@@ -767,6 +767,8 @@ static std::unordered_map<String, CHSetting> mergeTreeTableSettings = {
 
 std::unordered_map<TableEngineValues, std::unordered_map<String, CHSetting>> allTableSettings;
 
+std::unordered_map<TableEngineValues, std::unordered_map<String, CHSetting>> oracleTableSettings;
+
 std::unordered_map<TableEngineValues, std::unordered_map<String, CHSetting>> allColumnSettings;
 
 std::unordered_map<DictionaryLayouts, std::unordered_map<String, CHSetting>> allDictionaryLayoutSettings;
@@ -2005,6 +2007,17 @@ void loadFuzzerTableSettings(const FuzzConfig & fc, const bool has_cloud_feature
          {Executable, executableTableSettings},
          {ExecutablePool, executableTableSettings},
          {FileLog, fileLogTableSettings}});
+
+    /// These change the rows a read returns: a metadata pin keeps an old snapshot, incremental reads return only new data,
+    /// and Memory limits drop the oldest blocks on insert
+    oracleTableSettings = allTableSettings;
+    for (auto & [_, settings] : oracleTableSettings)
+    {
+        for (const auto & name : {"iceberg_metadata_file_path", "paimon_incremental_read", "max_rows_to_keep", "max_bytes_to_keep"})
+        {
+            settings.erase(name);
+        }
+    }
 
     allColumnSettings.insert(
         {{MergeTree, mergeTreeColumnSettings},

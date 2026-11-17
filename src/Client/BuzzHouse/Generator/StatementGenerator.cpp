@@ -2216,7 +2216,7 @@ std::optional<String> StatementGenerator::alterSingleTable(
              [&]
              {
                  SettingValues * svs = ati->mutable_table_modify_setting();
-                 const auto & engineSettings = allTableSettings.at(t.engine.value);
+                 const auto & engineSettings = (t.isDeterministic() ? oracleTableSettings : allTableSettings).at(t.engine.value);
                  /// Data lake tables reject any setting not of their own
                  const bool is_lake = t.isAnyLakeEngine();
                  if (!engineSettings.empty() && (is_lake || rg.nextSmallNumber() < 9))

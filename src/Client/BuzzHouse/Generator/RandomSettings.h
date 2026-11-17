@@ -86,6 +86,9 @@ extern std::unordered_map<String, CHSetting> dataLakeCatalogSettings;
 
 extern std::unordered_map<TableEngineValues, std::unordered_map<String, CHSetting>> allTableSettings;
 
+/// `allTableSettings` without the settings that break result oracles
+extern std::unordered_map<TableEngineValues, std::unordered_map<String, CHSetting>> oracleTableSettings;
+
 extern std::unordered_map<TableEngineValues, std::unordered_map<String, CHSetting>> allColumnSettings;
 
 extern std::unordered_map<String, CHSetting> backupSettings;

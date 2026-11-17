@@ -1849,7 +1849,7 @@ bool StatementGenerator::generateEngineDetails(
     }
     if (te->has_engine())
     {
-        const auto & engineSettings = allTableSettings.at(b.engine.value);
+        const auto & engineSettings = (b.isDeterministic() ? oracleTableSettings : allTableSettings).at(b.engine.value);
 
         if (!engineSettings.empty() && (!b.isJoinEngine() || !b.isShared())
             && ((!b.isJoinEngine() && !b.isSetEngine()) || !b.isDeterministic()) && rg.nextBool())
