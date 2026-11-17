@@ -69,6 +69,7 @@ static std::unordered_map<String, CHSetting> mergeTreeTableSettings = {
     {"allow_summing_columns_in_partition_or_order_key", trueOrFalseSetting},
     {"allow_suspicious_indices", trueOrFalseSetting},
     {"allow_tuple_element_aggregation", trueOrFalseSetting},
+    {"allow_vector_similarity_index_in_specialized_merge_tree", trueOrFalseSettingNoOracle},
     {"allow_vertical_merges_from_compact_to_wide_parts", trueOrFalseSetting},
     {"alter_column_secondary_index_mode",
      CHSetting(
@@ -153,6 +154,7 @@ static std::unordered_map<String, CHSetting> mergeTreeTableSettings = {
     {"enable_block_offset_column", trueOrFalseSetting},
     {"enable_index_granularity_compression", trueOrFalseSetting},
     {"enable_max_bytes_limit_for_min_age_to_force_merge", trueOrFalseSetting},
+    {"enable_merge_checkpoints", trueOrFalseSetting},
     {"enable_mixed_granularity_parts", trueOrFalseSetting},
     {"enable_replacing_merge_with_cleanup_for_min_age_to_force_merge", trueOrFalseSetting},
     {"enable_row_mask_update_coalescing", trueOrFalseSetting},
@@ -339,6 +341,9 @@ static std::unordered_map<String, CHSetting> mergeTreeTableSettings = {
     {"max_table_size_bytes_uncompressed", bytesRangeSetting},
     {"max_table_size_rows", rowsRangeSetting},
     {"max_uncompressed_bytes_in_patches", bytesRangeSetting},
+    {"merge_checkpoints_min_bytes", bytesRangeSetting},
+    {"merge_checkpoints_min_interval_seconds",
+     CHSetting([](RandomGenerator & rg, FuzzConfig &) { return std::to_string(rg.thresholdGenerator<uint64_t>(0.3, 0.3, 0, 120)); }, {}, false)},
     {"merge_max_block_size", highRangeNonZeroSetting},
     {"merge_max_block_size_bytes", bytesRangeSetting},
     {"merge_max_bytes_to_prewarm_cache", bytesRangeSetting},
@@ -921,6 +926,9 @@ static std::unordered_map<String, CHSetting> icebergTableOnlySettings
             },
             {},
             false)},
+       /// A UUID no metadata file has, so the table can't be read
+       {"iceberg_metadata_table_uuid",
+        CHSetting([](RandomGenerator & rg, FuzzConfig &) { return "'" + rg.nextUUID() + "'"; }, {}, false)},
        {"iceberg_outdated_snapshot_lifetime_seconds", icebergSecondsSetting},
        {"iceberg_read_with_snapshot_lease", trueOrFalseSetting},
        {"iceberg_recent_metadata_file_by_last_updated_ms_field", trueOrFalseSetting},
@@ -1293,6 +1301,7 @@ std::unordered_map<String, CHSetting> replicatedDatabaseSettings
 std::unordered_map<String, CHSetting> dataLakeCatalogSettings = {
     {"flat_namespaces", trueOrFalseSetting},
     {"force_add_bucket", trueOrFalseSetting},
+    {"oauth_server_use_request_body", trueOrFalseSetting},
     {"snapshot_loading_mode",
      CHSetting(
          [](RandomGenerator & rg, FuzzConfig &)
@@ -1873,6 +1882,16 @@ void loadFuzzerTableSettings(const FuzzConfig & fc, const bool has_cloud_feature
               {merge_selector_choices.begin(), merge_selector_choices.end()},
               false)}});
 
+    if (!fc.timezones.empty())
+    {
+        /// The time zone of the `DateTime64` that Iceberg `timestamptz` columns are mapped to, also settable per `DataLakeCatalog` database
+        const auto timestamptz_zone = CHSetting(
+            [](RandomGenerator & rg, FuzzConfig & cfg) { return "'" + (rg.nextBool() ? String("UTC") : rg.pickRandomly(cfg.timezones)) + "'"; },
+            {},
+            false);
+        icebergTableOnlySettings.insert({{"iceberg_timezone_for_timestamptz", timestamptz_zone}});
+        dataLakeCatalogSettings.insert({{"iceberg_timezone_for_timestamptz", timestamptz_zone}});
+    }
     for (const auto & entry : fc.disallowed_settings)
     {
         mergeTreeTableSettings.erase(entry);

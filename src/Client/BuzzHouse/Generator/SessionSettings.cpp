@@ -428,6 +428,16 @@ std::unordered_map<String, CHSetting> performanceSettings
        {"apply_string_filters_during_scan", trueOrFalseSetting},
        {"automatic_parallel_replicas_max_duplicated_read_ratio", probRangeSetting},
        {"automatic_parallel_replicas_remember_boundary", trueOrFalseSetting},
+       /// The ratio of the larger to the smaller row count before the statistics are collected again
+       {"automatic_parallel_replicas_statistics_drift_ratio",
+        CHSetting(
+            [](RandomGenerator & rg, FuzzConfig &)
+            {
+                static const DB::Strings choices = {"1", "1.01", "1.5", "2", "10", "1000"};
+                return rg.pickRandomly(choices);
+            },
+            {"1", "1.5", "1000"},
+            false)},
        {"cascades_aggregation_pushdown", trueOrFalseSetting},
        {"cluster_function_process_archive_on_multiple_nodes", trueOrFalseSetting},
        {"compile_aggregate_expressions", trueOrFalseSetting},
@@ -476,6 +486,7 @@ std::unordered_map<String, CHSetting> performanceSettings
        {"enable_parallel_replicas", trueOrFalseSetting},
        {"enable_parallel_single_level_merge", trueOrFalseSetting},
        {"enable_producing_buckets_out_of_order_in_aggregation", trueOrFalseSetting},
+       {"enable_robin_hood_hash_for_joins", trueOrFalseSetting},
        {"enable_software_prefetch_in_join", trueOrFalseSetting},
        {"external_storage_push_down_limit", trueOrFalseSetting},
        {"group_by_top_k_optimization_shared_boundary", trueOrFalseSetting},
