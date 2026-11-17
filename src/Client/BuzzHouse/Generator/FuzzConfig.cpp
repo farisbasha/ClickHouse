@@ -1440,7 +1440,7 @@ void FuzzConfig::validateClickHouseHealth()
             "",
             R"(SELECT "database", "table", "last_exception" FROM "system"."replicas" WHERE readonly_start_time IS NOT NULL LIMIT 3)",
             R"(SELECT "database", "table", "part_name", "exception" FROM "system"."part_log" WHERE exception != '' AND error NOT IN )"
-                + data_conversion_errors + " AND event_time > (now() - toIntervalSecond(60)) ORDER BY event_time DESC LIMIT 3)",
+                + data_conversion_errors + " AND event_time > (now() - toIntervalSecond(60)) ORDER BY event_time DESC LIMIT 3",
             R"(SELECT "message" FROM "system"."text_log" WHERE event_time >= now() - toIntervalSecond(60) AND level <= 'Information' AND splitByString(' in scope ', splitByString('(query: ', splitByString('(in query: ', message)[1])[1])[1] ILIKE concat('%', 'REPLICA', '_ALREADY', '_EXISTS', '%') ORDER BY event_time DESC LIMIT 3)",
             R"(SELECT "database", "table", "last_exception" FROM "system"."replication_queue" WHERE "last_exception" != '' LIMIT 3)",
             R"(SELECT "message" FROM "system"."text_log" WHERE event_time >= now() - toIntervalSecond(60) AND level <= 'Information' AND splitByString(' in scope ', splitByString('(query: ', splitByString('(in query: ', message)[1])[1])[1] ILIKE concat('%', 'LOGICAL', '_ERROR', '%') ORDER BY event_time DESC LIMIT 3)",
