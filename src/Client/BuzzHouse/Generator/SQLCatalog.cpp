@@ -170,12 +170,13 @@ bool TableEngineDescriptor::hasVersionColumn() const
 
 bool TableEngineDescriptor::areInsertsAppends() const
 {
+    /// Not Redis: its sink writes with MSET, which overwrites an existing key.
+    /// Not Hudi, Dictionary or MaterializedPostgreSQL: they are read-only, so the insert always fails
     return (value == TableEngineValues::MergeTree && !has_unique_key) || isLogFamily() || value == TableEngineValues::Memory || value == TableEngineValues::MySQL
-        || value == TableEngineValues::PostgreSQL || value == TableEngineValues::MaterializedPostgreSQL
-        || value == TableEngineValues::SQLite || value == TableEngineValues::MongoDB || value == TableEngineValues::Redis
-        || value == TableEngineValues::Hudi || (value >= TableEngineValues::DeltaLakeS3 && value <= TableEngineValues::DeltaLakeLocal)
+        || value == TableEngineValues::PostgreSQL || value == TableEngineValues::SQLite || value == TableEngineValues::MongoDB
+        || (value >= TableEngineValues::DeltaLakeS3 && value <= TableEngineValues::DeltaLakeLocal)
         || (value >= TableEngineValues::IcebergS3 && value <= TableEngineValues::IcebergLocal)
-        || (value >= TableEngineValues::PaimonS3 && value <= TableEngineValues::PaimonLocal) || value == TableEngineValues::Dictionary;
+        || (value >= TableEngineValues::PaimonS3 && value <= TableEngineValues::PaimonLocal);
 }
 
 void SQLBase::setDeterministic(const FuzzConfig & fc, RandomGenerator & rg, SQLBase & b)

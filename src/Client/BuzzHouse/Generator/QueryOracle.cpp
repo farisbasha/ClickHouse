@@ -1148,6 +1148,9 @@ void QueryOracle::dumpOracleIntermediateSteps(
             next2.mutable_single_query()->mutable_explain()->mutable_inner_query()->mutable_system_cmd()->set_flush_async_insert_queue(
                 true);
             gen.generateInsertToTable(rg, t, false, nrows, ins);
+            /// A block equal to an earlier one is dropped by insert deduplication, and the count would not grow
+            StatementGenerator::appendSetting(ins->mutable_setting_values(), "deduplicate_insert", "'disable'");
+            StatementGenerator::appendSetting(ins->mutable_setting_values(), "deduplicate_insert_select", "'disable'");
             intermediate_queries.emplace_back(next);
             intermediate_queries.emplace_back(next2);
         }
