@@ -71,15 +71,16 @@ class ElOraculoDeTablas:
         )
 
         try:
-            # Local engines only, without TTL; Summing/Aggregating FINAL depends on the part layout. RENAME is
-            # local, so replicas outside a Replicated database keep getting inserts under the old name, and
-            # materialized views keep writing into their targets and inner tables.
+            # Local engines only, without TTL; Summing/Aggregating FINAL depends on the part layout, and Collapsing
+            # FINAL on the merge order of arbitrary signs. RENAME is local, so replicas outside a Replicated database
+            # keep getting inserts under the old name, and materialized views keep writing into their targets and
+            # inner tables.
             tables_str = client.query("""
                 SELECT database, name, engine
                 FROM system.tables
                 WHERE database NOT IN ('system', 'information_schema', 'INFORMATION_SCHEMA')
                 AND NOT is_temporary
-                AND match(engine, '^(Shared|Replicated)?(|Replacing|Coalescing|Collapsing|VersionedCollapsing)MergeTree$|^(Log|TinyLog|StripeLog)$')
+                AND match(engine, '^(Shared|Replicated)?(|Replacing|Coalescing)MergeTree$|^(Log|TinyLog|StripeLog)$')
                 AND position(create_table_query, ' TTL ') = 0
                 AND (NOT startsWith(engine, 'Replicated') OR database IN (SELECT name FROM system.databases WHERE engine = 'Replicated'))
                 AND NOT startsWith(name, '.inner')

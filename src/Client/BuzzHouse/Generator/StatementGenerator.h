@@ -1068,8 +1068,9 @@ public:
     { return t.isAttached() && !t.isNotTruncableEngine() && t.engine.value != TableEngineValues::GenerateRandom; };
     const std::function<bool(const SQLTable &)> attached_tables_to_compare_content = [](const SQLTable & t)
     {
-        return t.isAttached() && t.engine.value != TableEngineValues::CollapsingMergeTree
-            && t.engine.value != TableEngineValues::VersionedCollapsingMergeTree && t.isDeterministic();
+        /// Collapsing FINAL depends on the merge order of arbitrary signs, also behind an Alias
+        return t.isAttached() && !t.hasEngine(TableEngineValues::CollapsingMergeTree, true)
+            && !t.hasEngine(TableEngineValues::VersionedCollapsingMergeTree, true) && t.isDeterministic();
     };
     const std::function<bool(const SQLTable &)> attached_tables_for_table_peer_oracle
         = [](const SQLTable & t) { return t.isAttached() && !t.isNotTruncableEngine() && t.isDeterministic(); };
