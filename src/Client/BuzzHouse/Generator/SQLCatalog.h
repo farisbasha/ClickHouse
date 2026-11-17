@@ -198,6 +198,8 @@ struct TableEngineDescriptor
     TableEngineValues value = TableEngineValues::Null;
     std::optional<TableEngineOption> option;
     bool is_deterministic = false;
+    /// An insert into a UNIQUE KEY table overwrites the rows with the same key
+    bool has_unique_key = false;
 
     TableEngineDescriptor() = default;
     explicit TableEngineDescriptor(const TableEngineValues value_)

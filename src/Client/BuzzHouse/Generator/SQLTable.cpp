@@ -1067,6 +1067,7 @@ void StatementGenerator::generateMergeTreeEngineDetails(
         const uint32_t ncols
             = rg.randomInt<uint32_t>(1, std::min<uint32_t>(static_cast<uint32_t>(this->filtered_entries.size()), UINT32_C(3)));
 
+        b.engine.has_unique_key = true;
         std::shuffle(this->filtered_entries.begin(), this->filtered_entries.end(), rg.generator);
         for (uint32_t i = 0; i < ncols; i++)
         {

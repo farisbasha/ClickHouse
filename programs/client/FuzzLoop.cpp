@@ -793,19 +793,24 @@ bool Client::buzzHouse()
         BuzzHouse::QueryOracle qo(*fuzz_config);
         /// Open transactions and hypothetical objects are session scoped on the server, so the
         /// bookkeeping must be dropped on every reconnect, including the ones `tryToReconnect`
-        /// does after query errors on a dropped TCP session.
-        after_fuzz_reconnect = [&gen]()
-        {
-            gen.setInTransaction(false);
-            gen.clearHypotheticals();
-            gen.dropTemporaryObjects();
-        };
+        /// does after query errors on a dropped TCP session. A reconnect can happen while generation
+        /// or an oracle still holds references into the catalog, so the cleanup waits for the next iteration.
+        bool session_reset = false;
+        after_fuzz_reconnect = [&session_reset]() { session_reset = true; };
         SCOPE_EXIT({ after_fuzz_reconnect = {}; });
         while (server_up)
         {
             no_timeout = !deadline || clock::now() < *deadline;
             if (!no_timeout)
                 break;
+
+            if (session_reset)
+            {
+                session_reset = false;
+                gen.setInTransaction(false);
+                gen.clearHypotheticals();
+                gen.dropTemporaryObjects();
+            }
 
             sq1.Clear();
             full_query.resize(0);

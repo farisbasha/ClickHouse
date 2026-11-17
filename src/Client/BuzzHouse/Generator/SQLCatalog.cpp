@@ -170,7 +170,7 @@ bool TableEngineDescriptor::hasVersionColumn() const
 
 bool TableEngineDescriptor::areInsertsAppends() const
 {
-    return value == TableEngineValues::MergeTree || isLogFamily() || value == TableEngineValues::Memory || value == TableEngineValues::MySQL
+    return (value == TableEngineValues::MergeTree && !has_unique_key) || isLogFamily() || value == TableEngineValues::Memory || value == TableEngineValues::MySQL
         || value == TableEngineValues::PostgreSQL || value == TableEngineValues::MaterializedPostgreSQL
         || value == TableEngineValues::SQLite || value == TableEngineValues::MongoDB || value == TableEngineValues::Redis
         || value == TableEngineValues::Hudi || (value >= TableEngineValues::DeltaLakeS3 && value <= TableEngineValues::DeltaLakeLocal)
