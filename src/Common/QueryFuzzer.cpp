@@ -4332,6 +4332,8 @@ String QueryFuzzer::fuzzQueryText(const String & text, const bool is_expression)
         true);
     if (!ast)
         return {};
+    /// The parser shares nodes, e.g. the `BETWEEN` subject; `clone` makes a tree, as for the main query
+    ast = ast->clone();
     fuzz(ast);
     return ast->formatWithSecretsOneLine();
 }
@@ -4411,6 +4413,9 @@ String QueryFuzzer::fuzzStructure(const String & structure)
         DBMS_DEFAULT_MAX_PARSER_DEPTH,
         DBMS_DEFAULT_MAX_PARSER_BACKTRACKS,
         true);
+    /// The parser shares nodes, e.g. the `BETWEEN` subject in a default expression; `clone` makes a tree
+    if (list)
+        list = list->clone();
     auto * columns = list ? list->as<ASTExpressionList>() : nullptr;
     if (!columns || columns->children.empty())
         return {};
